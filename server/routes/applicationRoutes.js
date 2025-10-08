@@ -1,0 +1,110 @@
+// routes/applicationRoutes.js
+import express from "express";
+import Application from "../models/Application.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+
+const router = express.Router();
+
+/**
+ * CREATE - Add a new job application
+ */
+router.post("/", verifyToken, async (req, res) => {
+  try {
+    const newApplication = await Application.create({
+      ...req.body,
+      userId: req.user.uid, // store user’s Firebase UID
+    });
+    res.status(201).json(newApplication);
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map(
+        (val) => val.message
+      );
+      return res.status(400).json({ errors: messages });
+    }
+    res.status(500).json({
+      message: "Server error, please try again later.",
+    });
+  }
+});
+
+/**
+ * READ - Get all job applications
+ */
+router.get("/", verifyToken, async (req, res) => {
+  try {
+    // Only fetch applications that belong to the current user
+    const applications = await Application.find({
+      userId: req.user.uid,
+    });
+    res.status(200).json(applications);
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch applications." });
+  }
+});
+
+/**
+ * UPDATE - Edit a job application
+ */
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    // Find the app by ID and make sure it belongs to this user
+    const updatedApp = await Application.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.uid }, // ✅ ownership filter
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedApp) {
+      return res.status(404).json({
+        message: "Application not found or unauthorized.",
+      });
+    }
+
+    res.status(200).json(updatedApp);
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map(
+        (val) => val.message
+      );
+      return res.status(400).json({ errors: messages });
+    }
+    console.error("Error updating application:", error);
+    res.status(500).json({
+      message: "Server error while updating application.",
+    });
+  }
+});
+
+/**
+ * DELETE - Remove a specific job application
+ */
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    // Only delete if this user's UID matches the stored one
+    const deletedApp = await Application.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.uid, // ✅ ensures they can only delete their own
+    });
+
+    if (!deletedApp) {
+      return res.status(404).json({
+        message: "Application not found or unauthorized.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Application deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting application:", error);
+    res.status(500).json({
+      message: "Server error while deleting application.",
+    });
+  }
+});
+
+export default router;
