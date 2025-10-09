@@ -13,6 +13,7 @@ import {
 function Dashboard() {
   const [applications, setApplications] = useState([]);
   const { user, logout } = useAuth();
+  const [editingApp, setEditingApp] = useState(null);
 
   useEffect(() => {
     console.log("Dashboard useEffect is running...");
@@ -92,6 +93,30 @@ function Dashboard() {
     }
   };
 
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.put(
+        `/applications/${editingApp._id}`,
+        formData
+      );
+      setApplications(
+        applications.map((app) =>
+          app._id === editingApp._id ? res.data : app
+        )
+      );
+      setEditingApp(null);
+      setFormData({
+        company: "",
+        position: "",
+        status: "applied",
+        notes: "",
+      });
+    } catch (error) {
+      console.error("Error updating application:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <h1 className="text-4xl font-bold mb-2">
@@ -146,12 +171,17 @@ function Dashboard() {
       {/* Form */}
       {showForm && (
         <form
-          onSubmit={handleSubmit}
+          onSubmit={
+            editingApp ? handleUpdate : handleSubmit
+          }
           className="bg-gray-800 p-6 rounded-lg shadow mb-6 w-full max-w-lg mx-auto"
         >
           <h2 className="text-xl font-semibold mb-4">
-            New Application
+            {editingApp
+              ? "Edit Application"
+              : "New Application"}
           </h2>
+
           <div className="mb-3">
             <label className="block mb-1">Company</label>
             <input
@@ -203,9 +233,13 @@ function Dashboard() {
 
           <button
             type="submit"
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className={`${
+              editingApp
+                ? "bg-yellow-500 hover:bg-yellow-600"
+                : "bg-green-600 hover:bg-green-700"
+            } text-white px-4 py-2 rounded`}
           >
-            Save
+            {editingApp ? "Update" : "Save"}
           </button>
         </form>
       )}
@@ -271,13 +305,17 @@ function Dashboard() {
                       Delete
                     </button>
 
-                    {/* Edit button for later */}
                     <button
-                      onClick={() =>
-                        alert(
-                          "Edit functionality coming soon!"
-                        )
-                      }
+                      onClick={() => {
+                        setEditingApp(app);
+                        setFormData({
+                          company: app.company,
+                          position: app.position,
+                          status: app.status,
+                          notes: app.notes,
+                        });
+                        setShowForm(true);
+                      }}
                       className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
                     >
                       Edit

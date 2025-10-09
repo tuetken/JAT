@@ -48,36 +48,30 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
-/**
- * UPDATE - Edit a job application
- */
+// UPDATE an application
 router.put("/:id", verifyToken, async (req, res) => {
   try {
-    // Find the app by ID and make sure it belongs to this user
     const updatedApp = await Application.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.uid }, // ✅ ownership filter
-      req.body,
+      { _id: req.params.id, userId: req.user.uid },
+      {
+        company: req.body.company,
+        position: req.body.position,
+        status: req.body.status.toLowerCase(),
+        notes: req.body.notes,
+      },
       { new: true, runValidators: true }
     );
 
     if (!updatedApp) {
-      return res.status(404).json({
-        message: "Application not found or unauthorized.",
-      });
+      return res
+        .status(404)
+        .json({ message: "Application not found" });
     }
 
-    res.status(200).json(updatedApp);
+    res.json(updatedApp);
   } catch (error) {
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (val) => val.message
-      );
-      return res.status(400).json({ errors: messages });
-    }
     console.error("Error updating application:", error);
-    res.status(500).json({
-      message: "Server error while updating application.",
-    });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
