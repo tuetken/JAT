@@ -1,43 +1,48 @@
 import React from "react";
-import ReactDOM from "react-dom/client"; // ✅ ReactDOM from here only
-import App from "./App.jsx";
-import "./index.css";
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
   Route,
-} from "react-router-dom"; // ✅ Router imports only
+} from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+
 import Login from "./pages/Auth/Login.jsx";
 import Register from "./pages/Auth/Register.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import Dashboard from "./pages/Auth/Dashboard.jsx";
-import Reminders from "./pages/Auth/Reminders.jsx";
+import Dashboard from "./pages/Dashboard/Dashboard.jsx";
+import Reminders from "./pages/Reminders/Reminders.jsx";
+import MainLayout from "./layouts/MainLayout.jsx";
+
+import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Protected Layout Routes */}
           <Route
-            path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <MainLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/reminders"
-            element={
-              <ProtectedRoute>
-                <Reminders />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
+            <Route
+              path="/reminders"
+              element={<Reminders />}
+            />
+          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>
