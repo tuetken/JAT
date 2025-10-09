@@ -11,20 +11,22 @@ const router = express.Router();
 router.post("/", verifyToken, async (req, res) => {
   try {
     const newApplication = await Application.create({
-      ...req.body,
-      userId: req.user.uid, // store user’s Firebase UID
+      userId: req.user.uid, // userId from Firebase
+      company: req.body.company,
+      position: req.body.position,
+      status: req.body.status,
+      notes: req.body.notes,
     });
     res.status(201).json(newApplication);
   } catch (error) {
+    console.error(error);
     if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (val) => val.message
-      );
-      return res.status(400).json({ errors: messages });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: error.errors,
+      });
     }
-    res.status(500).json({
-      message: "Server error, please try again later.",
-    });
+    res.status(500).json({ message: "Server error" });
   }
 });
 

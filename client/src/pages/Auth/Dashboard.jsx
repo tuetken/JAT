@@ -58,6 +58,40 @@ function Dashboard() {
     await logout();
   };
 
+  // --- NEW STATE ---
+  const [formData, setFormData] = useState({
+    company: "",
+    position: "",
+    status: "applied",
+    notes: "",
+  });
+  const [showForm, setShowForm] = useState(false);
+
+  // --- FORM HANDLERS ---
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post("/applications", formData);
+      setApplications([...applications, res.data]);
+      setFormData({
+        company: "",
+        position: "",
+        status: "applied",
+        notes: "",
+      });
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error creating application:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <h1 className="text-4xl font-bold mb-2">
@@ -96,6 +130,163 @@ function Dashboard() {
               </p>
             </div>
           )
+        )}
+      </div>
+
+      {/* Add Application Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          {showForm ? "Cancel" : "Add Application"}
+        </button>
+      </div>
+
+      {/* Form */}
+      {showForm && (
+        <form
+          onSubmit={handleSubmit}
+          className="bg-gray-800 p-6 rounded-lg shadow mb-6 w-full max-w-lg mx-auto"
+        >
+          <h2 className="text-xl font-semibold mb-4">
+            New Application
+          </h2>
+          <div className="mb-3">
+            <label className="block mb-1">Company</label>
+            <input
+              type="text"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              className="w-full p-2 rounded text-black"
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="block mb-1">Position</label>
+            <input
+              type="text"
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              className="w-full p-2 rounded text-black"
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="block mb-1">Status</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full p-2 rounded text-black"
+            >
+              <option value="applied">Applied</option>
+              <option value="interview">Interview</option>
+              <option value="offer">Offer</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label className="block mb-1">Notes</label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              className="w-full p-2 rounded text-black"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Save
+          </button>
+        </form>
+      )}
+
+      {/* Applications List */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow mt-8">
+        <h2 className="text-xl font-semibold mb-4">
+          All Applications
+        </h2>
+
+        {applications.length === 0 ? (
+          <p>No applications found.</p>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="p-2">Company</th>
+                <th className="p-2">Position</th>
+                <th className="p-2">Status</th>
+                <th className="p-2">Notes</th>
+                <th className="p-2 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((app) => (
+                <tr
+                  key={app._id}
+                  className="border-b border-gray-700"
+                >
+                  <td className="p-2">{app.company}</td>
+                  <td className="p-2">{app.position}</td>
+                  <td className="p-2 capitalize">
+                    {app.status}
+                  </td>
+                  <td className="p-2">{app.notes}</td>
+                  <td className="p-2 text-center">
+                    <button
+                      onClick={async () => {
+                        const confirmDelete =
+                          window.confirm(
+                            `Delete ${app.company}?`
+                          );
+                        if (!confirmDelete) return;
+
+                        try {
+                          await api.delete(
+                            `/applications/${app._id}`
+                          );
+                          setApplications(
+                            applications.filter(
+                              (a) => a._id !== app._id
+                            )
+                          );
+                        } catch (error) {
+                          console.error(
+                            "Error deleting application:",
+                            error
+                          );
+                        }
+                      }}
+                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 mr-2"
+                    >
+                      Delete
+                    </button>
+
+                    {/* Edit button for later */}
+                    <button
+                      onClick={() =>
+                        alert(
+                          "Edit functionality coming soon!"
+                        )
+                      }
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 

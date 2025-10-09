@@ -26,14 +26,14 @@ const applicationSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        "Applied",
-        "Awaiting Response",
-        "Interview",
-        "Offer Received",
-        "Offer Sent",
-        "Rejected",
+        "applied",
+        "awaiting response",
+        "interview",
+        "offer received",
+        "offer sent",
+        "rejected",
       ],
-      default: "Applied",
+      default: "applied",
     },
     dateApplied: { type: Date, default: Date.now },
     notes: {
