@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import admin from "firebase-admin";
 import { createRequire } from "module";
+import reminderRoutes from "./routes/reminderRoutes.js";
 
 const require = createRequire(import.meta.url);
 const serviceAccount = require("./config/firebaseServiceAccount.json");
@@ -41,3 +42,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server Is Running On Port ${PORT}`);
 });
+
+// Reminders
+app.use("/api/reminders", reminderRoutes);
