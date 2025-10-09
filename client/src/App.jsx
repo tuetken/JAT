@@ -1,18 +1,24 @@
 import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold">
-        Job Application Tracker
+      <h1 className="text-xl font-bold mb-2">
+        Welcome To Your Dashboard
       </h1>
-      {user ? (
-        <p>Logged in as: {user.email}</p>
-      ) : (
-        <p>No user logged in</p>
-      )}
+      <p className="mb-4">Logged In As: {user?.email}</p>
+      <button
+        onClick={handleLogout}
+        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+      >
+        Log Out
+      </button>
     </div>
   );
 }
