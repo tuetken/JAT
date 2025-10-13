@@ -66,7 +66,7 @@ function Reminders() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="w-full max-w-6xl mx-auto p-6 space-y-8 text-white">
       <h1 className="text-4xl font-bold mb-6">Reminders</h1>
       <p className="mb-6">Logged In As: {user?.email}</p>
 

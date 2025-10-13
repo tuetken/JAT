@@ -15,13 +15,12 @@ function Topbar() {
   };
 
   return (
-    <header className="w-full bg-gray-800 py-4 px-6 flex items-center justify-between shadow">
-      <h1 className="text-2xl font-semibold text-blue-400">
-        {getTitle()}
-      </h1>
-
-      <div className="flex items-center space-x-3">
-        <p className="text-gray-300">
+    <header className="w-full bg-gray-800 py-4">
+      <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-blue-400">
+          {getTitle()}
+        </h1>
+        <p className="text-gray-300 text-sm sm:text-base">
           Signed in as:{" "}
           <span className="text-white">{user?.email}</span>
         </p>

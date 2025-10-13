@@ -118,33 +118,38 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="w-full max-w-6xl mx-auto p-6 space-y-8 text-white">
       {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-800 p-6 rounded-lg shadow text-center">
-          <h2 className="text-lg font-semibold mb-2">
-            Total Applications
-          </h2>
-          <p className="text-3xl font-bold text-blue-400">
-            {total}
-          </p>
+      <section>
+        <h2 className="text-lg sm:text-xl font-semibold mb-4">
+          Summary
+        </h2>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[150px] bg-brand-surface p-6 rounded-lg shadow text-center">
+            <h3 className="text-gray-400 text-sm uppercase mb-2">
+              Total
+            </h3>
+            <p className="text-3xl font-bold text-brand-highlight">
+              {applications.length}
+            </p>
+          </div>
+          {Object.entries(statusCounts).map(
+            ([status, count]) => (
+              <div
+                key={status}
+                className="flex-1 min-w-[150px] bg-brand-surface p-6 rounded-lg shadow text-center"
+              >
+                <h3 className="text-gray-400 text-sm uppercase mb-2">
+                  {status}
+                </h3>
+                <p className="text-3xl font-bold text-brand-accent">
+                  {count}
+                </p>
+              </div>
+            )
+          )}
         </div>
-        {Object.entries(statusCounts).map(
-          ([status, count]) => (
-            <div
-              key={status}
-              className="bg-gray-800 p-6 rounded-lg shadow text-center"
-            >
-              <h2 className="text-lg font-semibold mb-2 capitalize">
-                {status}
-              </h2>
-              <p className="text-3xl font-bold text-green-400">
-                {count}
-              </p>
-            </div>
-          )
-        )}
-      </div>
+      </section>
 
       {/* Add Application Button */}
       <div className="mb-6">
@@ -317,36 +322,38 @@ function Dashboard() {
       </div>
 
       {/* Chart */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">
-          Applications by Status
-        </h2>
-        {chartData.length === 0 ? (
-          <p>No data available yet.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                dataKey="value"
-                label
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      <section className="flex flex-col lg:flex-row gap-8">
+        <div className="bg-gray-800 p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">
+            Applications by Status
+          </h2>
+          {chartData.length === 0 ? (
+            <p>No data available yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
