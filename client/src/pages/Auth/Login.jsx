@@ -1,7 +1,6 @@
-// src/pages/Auth/Login.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -12,56 +11,73 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     try {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError("Invalid email or password");
+      setError("Invalid login credentials");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded-2xl shadow w-80">
-        <h2 className="text-xl font-bold mb-4 text-center">
-          Log In
-        </h2>
+    <div className="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      {/* Login Card */}
+      <div className="bg-gray-800 bg-opacity-90 p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 text-center transform transition-all duration-300 hover:scale-[1.01]">
+        <h1 className="text-4xl font-extrabold text-blue-400 mb-8 tracking-wide">
+          Job Tracker Login
+        </h1>
+
         {error && (
-          <p className="text-red-500 text-sm mb-2">
+          <div className="text-red-400 text-sm mb-4 font-medium">
             {error}
-          </p>
+          </div>
         )}
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email"
-            className="border p-2 rounded w-full mb-3"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="border p-2 rounded w-full mb-4"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-left text-sm mb-2 text-gray-300">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-left text-sm mb-2 text-gray-300">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
           <button
             type="submit"
-            className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-semibold py-2 rounded-lg shadow-md"
           >
             Log In
           </button>
         </form>
-        <p className="text-sm text-center mt-4">
-          Don't have an account?{" "}
-          <a
-            href="/register"
-            className="text-blue-600 underline"
+
+        <p className="text-sm text-gray-400 mt-8">
+          Don’t have an account?{" "}
+          <Link
+            to="/register"
+            className="text-blue-400 hover:text-blue-300 font-medium"
           >
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

@@ -8,25 +8,21 @@ const router = express.Router();
 /**
  * CREATE - Add a new job application
  */
+// CREATE application
 router.post("/", verifyToken, async (req, res) => {
   try {
-    const newApplication = await Application.create({
-      userId: req.user.uid, // userId from Firebase
+    const newApp = await Application.create({
+      userId: req.user.uid,
       company: req.body.company,
       position: req.body.position,
-      status: req.body.status,
+      status: req.body.status?.toLowerCase(),
       notes: req.body.notes,
+      reminder: req.body.reminder || null,
     });
-    res.status(201).json(newApplication);
+    res.status(201).json(newApp);
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: error.errors,
-      });
-    }
-    res.status(500).json({ message: "Server error" });
+    console.error("Error creating application:", error);
+    res.status(400).json({ message: error.message });
   }
 });
 
@@ -48,7 +44,7 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
-// UPDATE an application
+// UPDATE application
 router.put("/:id", verifyToken, async (req, res) => {
   try {
     const updatedApp = await Application.findOneAndUpdate(
@@ -56,8 +52,9 @@ router.put("/:id", verifyToken, async (req, res) => {
       {
         company: req.body.company,
         position: req.body.position,
-        status: req.body.status.toLowerCase(),
+        status: req.body.status?.toLowerCase(),
         notes: req.body.notes,
+        reminder: req.body.reminder || null, // ✅ include this
       },
       { new: true, runValidators: true }
     );

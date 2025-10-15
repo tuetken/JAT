@@ -12,15 +12,18 @@ import {
 
 function Dashboard() {
   const [applications, setApplications] = useState([]);
-  const { user, logout } = useAuth();
+  const [chartData, setChartData] = useState([]);
+  const [notifiedIds, setNotifiedIds] = useState([]);
   const [editingApp, setEditingApp] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const { logout } = useAuth();
+
+  // Reminder Notifications + Fetch Applications
 
   useEffect(() => {
-    console.log("Dashboard useEffect is running...");
     const fetchApplications = async () => {
       try {
         const res = await api.get("/applications");
-        console.log("Fetched applications:", res.data);
         setApplications(res.data);
       } catch (error) {
         console.error(
@@ -32,43 +35,94 @@ function Dashboard() {
     fetchApplications();
   }, []);
 
-  // --- Derive Stats ---
-  const total = applications.length;
-  const statusCounts = applications.reduce((acc, app) => {
-    acc[app.status] = (acc[app.status] || 0) + 1;
-    return acc;
-  }, {});
+  useEffect(() => {
+    if (
+      "Notification" in window &&
+      Notification.permission !== "granted"
+    ) {
+      Notification.requestPermission();
+    }
 
-  const chartData = Object.entries(statusCounts).map(
-    ([status, count]) => ({
-      name:
-        status.charAt(0).toUpperCase() + status.slice(1),
-      value: count,
-    })
-  );
+    // Check and trigger reminders
 
-  const COLORS = [
-    "#2563eb",
-    "#16a34a",
-    "#f97316",
-    "#dc2626",
-    "#9333ea",
-  ];
+    const checkReminders = () => {
+      const today = new Date().toISOString().split("T")[0];
+      applications.forEach((app) => {
+        if (app.reminder) {
+          const reminderDate = new Date(app.reminder)
+            .toISOString()
+            .split("T")[0];
+          if (
+            reminderDate === today &&
+            !notifiedIds.includes(app._id)
+          ) {
+            triggerNotification(app);
+            setNotifiedIds((prev) => [...prev, app._id]);
+          }
+        }
+      });
+    };
 
-  const handleLogout = async () => {
-    await logout();
-  };
+    const triggerNotification = (app) => {
+      if (Notification.permission === "granted") {
+        new Notification("📅 Reminder", {
+          body: `Reminder for ${app.company}: ${app.position}`,
+          icon: "/favicon.ico",
+        });
+      }
+    };
 
-  // --- NEW STATE ---
+    if (applications.length > 0) checkReminders();
+    const hourlyInterval = setInterval(
+      checkReminders,
+      1000 * 60 * 60
+    );
+    return () => clearInterval(hourlyInterval);
+  }, [applications, notifiedIds]);
+
+  // Chart Data
+
+  useEffect(() => {
+    if (applications.length === 0) {
+      setChartData([]);
+      return;
+    }
+
+    const statusCounts = applications.reduce((acc, app) => {
+      if (!app.status) return acc;
+      const normalized = app.status.toLowerCase().trim();
+      acc[normalized] = (acc[normalized] || 0) + 1;
+      return acc;
+    }, {});
+
+    const labelMap = {
+      "waiting for response": "Waiting For Response",
+      interview: "Interview",
+      "offer received": "Offer Received",
+      accepted: "Accepted",
+      denied: "Denied",
+    };
+
+    const data = Object.keys(statusCounts).map(
+      (status) => ({
+        name: labelMap[status] || status,
+        value: Number(statusCounts[status]),
+      })
+    );
+
+    setChartData(data);
+  }, [applications]);
+
+  // CRUD
+
   const [formData, setFormData] = useState({
     company: "",
     position: "",
-    status: "applied",
+    status: "waiting for response",
     notes: "",
+    reminder: "",
   });
-  const [showForm, setShowForm] = useState(false);
 
-  // --- FORM HANDLERS ---
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -79,15 +133,17 @@ function Dashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/applications", formData);
-      setApplications([...applications, res.data]);
-      setFormData({
-        company: "",
-        position: "",
-        status: "applied",
-        notes: "",
+      const res = await api.post("/applications", {
+        company: formData.company,
+        position: formData.position,
+        status: formData.status,
+        notes: formData.notes,
+        reminder: formData.reminder
+          ? new Date(formData.reminder + "T00:00:00")
+          : null,
       });
-      setShowForm(false);
+      setApplications((prev) => [...prev, res.data]);
+      resetForm();
     } catch (error) {
       console.error("Error creating application:", error);
     }
@@ -98,23 +154,50 @@ function Dashboard() {
     try {
       const res = await api.put(
         `/applications/${editingApp._id}`,
-        formData
+        {
+          ...formData,
+          reminder: formData.reminder
+            ? new Date(formData.reminder + "T00:00:00")
+            : null,
+        }
       );
-      setApplications(
-        applications.map((app) =>
-          app._id === editingApp._id ? res.data : app
+      setApplications((prev) =>
+        prev.map((a) =>
+          a._id === editingApp._id ? res.data : a
         )
       );
+      resetForm();
       setEditingApp(null);
-      setFormData({
-        company: "",
-        position: "",
-        status: "applied",
-        notes: "",
-      });
     } catch (error) {
       console.error("Error updating application:", error);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      company: "",
+      position: "",
+      status: "waiting for response",
+      notes: "",
+      reminder: "",
+    });
+    setShowForm(false);
+  };
+
+  // Logout
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  // Render
+
+  const COLORS = {
+    "Waiting For Response": "#3B82F6",
+    Interview: "#10B981",
+    "Offer Received": "#F59E0B",
+    Accepted: "#84CC16",
+    Denied: "#EF4444",
   };
 
   return (
@@ -133,25 +216,24 @@ function Dashboard() {
               {applications.length}
             </p>
           </div>
-          {Object.entries(statusCounts).map(
-            ([status, count]) => (
-              <div
-                key={status}
-                className="flex-1 min-w-[150px] bg-brand-surface p-6 rounded-lg shadow text-center"
-              >
-                <h3 className="text-gray-400 text-sm uppercase mb-2">
-                  {status}
-                </h3>
-                <p className="text-3xl font-bold text-brand-accent">
-                  {count}
-                </p>
-              </div>
-            )
-          )}
+
+          {chartData.map(({ name, value }) => (
+            <div
+              key={name}
+              className="flex-1 min-w-[150px] bg-brand-surface p-6 rounded-lg shadow text-center"
+            >
+              <h3 className="text-gray-400 text-sm uppercase mb-2">
+                {name}
+              </h3>
+              <p className="text-3xl font-bold text-brand-accent">
+                {value}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Add Application Button */}
+      {/* Add / Edit Form */}
       <div className="mb-6">
         <button
           onClick={() => setShowForm(!showForm)}
@@ -161,7 +243,6 @@ function Dashboard() {
         </button>
       </div>
 
-      {/* Form */}
       {showForm && (
         <form
           onSubmit={
@@ -182,7 +263,7 @@ function Dashboard() {
               name="company"
               value={formData.company}
               onChange={handleChange}
-              className="w-full p-2 rounded text-black"
+              className="w-full p-2 rounded text-white bg-gray-700"
               required
             />
           </div>
@@ -194,7 +275,7 @@ function Dashboard() {
               name="position"
               value={formData.position}
               onChange={handleChange}
-              className="w-full p-2 rounded text-black"
+              className="w-full p-2 rounded text-white bg-gray-700"
               required
             />
           </div>
@@ -205,12 +286,19 @@ function Dashboard() {
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full p-2 rounded text-black"
+              className="w-full p-2 rounded text-white bg-gray-700"
+              required
             >
-              <option value="applied">Applied</option>
+              <option value="">Select Status</option>
+              <option value="waiting for response">
+                Waiting for Response
+              </option>
               <option value="interview">Interview</option>
-              <option value="offer">Offer</option>
-              <option value="rejected">Rejected</option>
+              <option value="offer received">
+                Offer Received
+              </option>
+              <option value="accepted">Accepted</option>
+              <option value="denied">Denied</option>
             </select>
           </div>
 
@@ -220,7 +308,24 @@ function Dashboard() {
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              className="w-full p-2 rounded text-black"
+              className="w-full p-2 rounded text-white bg-gray-700"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-2 text-gray-300">
+              Reminder Date
+            </label>
+            <input
+              type="date"
+              value={formData.reminder || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  reminder: e.target.value,
+                })
+              }
+              className="w-full p-2 border rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -253,6 +358,7 @@ function Dashboard() {
                 <th className="p-2">Position</th>
                 <th className="p-2">Status</th>
                 <th className="p-2">Notes</th>
+                <th className="p-2">Reminder</th>
                 <th className="p-2 text-center">Actions</th>
               </tr>
             </thead>
@@ -268,21 +374,28 @@ function Dashboard() {
                     {app.status}
                   </td>
                   <td className="p-2">{app.notes}</td>
+                  <td className="p-2">
+                    {app.reminder
+                      ? new Date(
+                          app.reminder
+                        ).toLocaleDateString()
+                      : "—"}
+                  </td>
                   <td className="p-2 text-center">
                     <button
                       onClick={async () => {
-                        const confirmDelete =
-                          window.confirm(
+                        if (
+                          !window.confirm(
                             `Delete ${app.company}?`
-                          );
-                        if (!confirmDelete) return;
-
+                          )
+                        )
+                          return;
                         try {
                           await api.delete(
                             `/applications/${app._id}`
                           );
-                          setApplications(
-                            applications.filter(
+                          setApplications((prev) =>
+                            prev.filter(
                               (a) => a._id !== app._id
                             )
                           );
@@ -306,6 +419,11 @@ function Dashboard() {
                           position: app.position,
                           status: app.status,
                           notes: app.notes,
+                          reminder: app.reminder
+                            ? new Date(app.reminder)
+                                .toISOString()
+                                .split("T")[0]
+                            : "",
                         });
                         setShowForm(true);
                       }}
@@ -322,38 +440,39 @@ function Dashboard() {
       </div>
 
       {/* Chart */}
-      <section className="flex flex-col lg:flex-row gap-8">
-        <div className="bg-gray-800 p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">
-            Applications by Status
-          </h2>
-          {chartData.length === 0 ? (
-            <p>No data available yet.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  dataKey="value"
-                  label
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </section>
+      <div className="bg-gray-800 p-4 rounded-lg shadow w-full max-w-sm min-h-[350px] overflow-visible flex flex-col items-center justify-center">
+        <h2 className="text-lg font-semibold mb-4">
+          Applications by Status
+        </h2>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                outerRadius="80%"
+                label
+                isAnimationActive={true}
+                animationDuration={800}
+              >
+                {chartData.map((entry, i) => (
+                  <Cell
+                    key={`cell-${i}`}
+                    fill={COLORS[entry.name] || "#8884d8"}
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-gray-400 italic">
+            No data yet
+          </p>
+        )}
+      </div>
     </div>
   );
 }

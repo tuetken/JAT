@@ -11,60 +11,38 @@ function MainLayout() {
   return (
     <div className="flex min-h-screen bg-brand-dark text-white transition-all duration-300">
       {/* Sidebar */}
-      <aside
-        className={`bg-gray-800 p-6 flex flex-col justify-between transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden"
-        }`}
-      >
-        <div
-          className={`${
-            sidebarOpen ? "opacity-100" : "opacity-0"
-          } transition-opacity duration-300`}
-        >
-          <h2 className="text-2xl font-bold mb-8 text-blue-400">
-            Job Application Tracker
-          </h2>
+      {sidebarOpen && (
+        <aside className="bg-gray-800 p-6 flex flex-col justify-between w-64 transition-all duration-300">
+          <div>
+            <h2 className="text-2xl font-bold mb-8 text-blue-400">
+              Job Application Tracker
+            </h2>
 
-          <nav className="flex flex-col space-y-3">
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                isActive
-                  ? "text-blue-400 font-semibold"
-                  : "text-gray-300 hover:text-white"
-              }
-            >
-              Dashboard
-            </NavLink>
-            <NavLink
-              to="/reminders"
-              className={({ isActive }) =>
-                isActive
-                  ? "text-blue-400 font-semibold"
-                  : "text-gray-300 hover:text-white"
-              }
-            >
-              Reminders
-            </NavLink>
-          </nav>
-        </div>
+            <nav className="flex flex-col space-y-3">
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-blue-400 font-semibold"
+                    : "text-gray-300 hover:text-white"
+                }
+              >
+                Dashboard
+              </NavLink>
+            </nav>
+          </div>
 
-        {sidebarOpen && (
           <button
             onClick={logout}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mt-6"
           >
             Log Out
           </button>
-        )}
-      </aside>
+        </aside>
+      )}
 
       {/* Main Content */}
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          sidebarOpen ? "ml-0" : "ml-0"
-        }`}
-      >
+      <div className="flex-1 flex flex-col transition-all duration-300">
         {/* Topbar */}
         <div className="w-full bg-gray-800 py-4 shadow-md flex items-center justify-between px-6">
           <button
