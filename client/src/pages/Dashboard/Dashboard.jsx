@@ -64,12 +64,18 @@ function Dashboard() {
     };
 
     const triggerNotification = (app) => {
-      if (Notification.permission === "granted") {
-        new Notification("📅 Reminder", {
-          body: `Reminder for ${app.company}: ${app.position}`,
-          icon: "/favicon.ico",
-        });
-      }
+      if (Notification.permission !== "granted") return;
+
+      const message =
+        app.reminderMessage &&
+        app.reminderMessage.trim().length > 0
+          ? `Reminder for ${app.company} — ${app.position}:\n${app.reminderMessage}`
+          : `Reminder for ${app.company} — ${app.position}`;
+
+      new Notification("📅 Reminder", {
+        body: message,
+        icon: "/favicon.ico",
+      });
     };
 
     if (applications.length > 0) checkReminders();
@@ -121,6 +127,7 @@ function Dashboard() {
     status: "waiting for response",
     notes: "",
     reminder: "",
+    reminderMessage: "",
   });
 
   const handleChange = (e) => {
@@ -132,8 +139,10 @@ function Dashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await api.post("/applications", {
+      // ✅ Build the payload exactly as Axios will send it
+      const payload = {
         company: formData.company,
         position: formData.position,
         status: formData.status,
@@ -141,9 +150,27 @@ function Dashboard() {
         reminder: formData.reminder
           ? new Date(formData.reminder + "T00:00:00")
           : null,
-      });
+        reminderMessage: formData.reminderMessage || "", // ✅ critical field
+      };
+
+      // 🧪 TEST: log what’s actually being sent
+      console.log("Payload being sent →", payload);
+
+      // 🚀 Send it to backend
+      const res = await api.post("/applications", payload);
+
+      // ✅ Update local state after successful save
       setApplications((prev) => [...prev, res.data]);
-      resetForm();
+
+      // ✅ Reset form fields
+      setFormData({
+        company: "",
+        position: "",
+        status: "waiting for response",
+        notes: "",
+        reminder: "",
+        reminderMessage: "", // ✅ reset too
+      });
     } catch (error) {
       console.error("Error creating application:", error);
     }
@@ -152,13 +179,18 @@ function Dashboard() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      console.log("Updating application →", formData); // ✅ verify
       const res = await api.put(
         `/applications/${editingApp._id}`,
         {
-          ...formData,
+          company: formData.company,
+          position: formData.position,
+          status: formData.status,
+          notes: formData.notes,
           reminder: formData.reminder
             ? new Date(formData.reminder + "T00:00:00")
             : null,
+          reminderMessage: formData.reminderMessage || "", // ✅ include this
         }
       );
       setApplications((prev) =>
@@ -166,8 +198,15 @@ function Dashboard() {
           a._id === editingApp._id ? res.data : a
         )
       );
-      resetForm();
       setEditingApp(null);
+      setFormData({
+        company: "",
+        position: "",
+        status: "waiting for response",
+        notes: "",
+        reminder: "",
+        reminderMessage: "",
+      });
     } catch (error) {
       console.error("Error updating application:", error);
     }
@@ -180,6 +219,7 @@ function Dashboard() {
       status: "waiting for response",
       notes: "",
       reminder: "",
+      reminderMessage: "",
     });
     setShowForm(false);
   };
@@ -329,6 +369,19 @@ function Dashboard() {
             />
           </div>
 
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-2 text-gray-300">
+              Reminder Message
+            </label>
+            <textarea
+              name="reminderMessage"
+              value={formData.reminderMessage}
+              onChange={handleChange}
+              placeholder="e.g. Follow up with recruiter..."
+              className="w-full p-2 border rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           <button
             type="submit"
             className={`${
@@ -359,6 +412,7 @@ function Dashboard() {
                 <th className="p-2">Status</th>
                 <th className="p-2">Notes</th>
                 <th className="p-2">Reminder</th>
+                <th className="p-2">Reminder Message</th>
                 <th className="p-2 text-center">Actions</th>
               </tr>
             </thead>
@@ -380,6 +434,9 @@ function Dashboard() {
                           app.reminder
                         ).toLocaleDateString()
                       : "—"}
+                  </td>
+                  <td className="p-2 italic text-gray-300">
+                    {app.reminderMessage || "—"}
                   </td>
                   <td className="p-2 text-center">
                     <button
@@ -424,6 +481,8 @@ function Dashboard() {
                                 .toISOString()
                                 .split("T")[0]
                             : "",
+                          reminderMessage:
+                            app.reminderMessage || "",
                         });
                         setShowForm(true);
                       }}

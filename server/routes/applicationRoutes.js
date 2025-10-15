@@ -18,6 +18,7 @@ router.post("/", verifyToken, async (req, res) => {
       status: req.body.status?.toLowerCase(),
       notes: req.body.notes,
       reminder: req.body.reminder || null,
+      reminderMessage: req.body.reminderMessage,
     });
     res.status(201).json(newApp);
   } catch (error) {
@@ -54,7 +55,8 @@ router.put("/:id", verifyToken, async (req, res) => {
         position: req.body.position,
         status: req.body.status?.toLowerCase(),
         notes: req.body.notes,
-        reminder: req.body.reminder || null, // ✅ include this
+        reminder: req.body.reminder || null,
+        reminderMessage: req.body.reminderMessage,
       },
       { new: true, runValidators: true }
     );
