@@ -3,7 +3,9 @@ import axios from "axios";
 import { auth } from "../firebase";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api", // ← must include /api
+  baseURL: import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL}/api`
+    : "http://localhost:5000/api", // fallback for local testing
 });
 
 api.interceptors.request.use(
