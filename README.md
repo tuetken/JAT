@@ -1,29 +1,83 @@
-<strong>**DO NOT DISTRIBUTE OR PUBLICLY POST SOLUTIONS TO THESE LABS. MAKE ALL FORKS OF THIS REPOSITORY WITH SOLUTION CODE PRIVATE. PLEASE REFER TO THE STUDENT CODE OF CONDUCT AND ETHICAL EXPECTATIONS FOR COLLEGE OF INFORMATION TECHNOLOGY STUDENTS FOR SPECIFICS. **</strong>
+Setting Up and Running the Application (Maintenance Purposes)
 
-# WESTERN GOVERNORS UNIVERSITY 
-## D424 – SOFTWARE ENGINEERING CAPSTONE
-Welcome to Software Engineering Capstone! This is an opportunity for students to develop full stack software engineering documentation and applications. They will execute documentation, unit testing, revision of software applications, and deploy software applications with scripts and containers on a cloud platform.
+The following will explain what the Job Application Tracker accomplishes, as well as how to install, configure, and maintain it.
 
-FOR SPECIFIC TASK INSTRUCTIONS AND REQUIREMENTS FOR THIS ASSESSMENT, PLEASE REFER TO THE COURSE PAGE.
-BASIC INSTRUCTIONS
-For this assessment, you will deploy your developed full stack software product to a web service of your choice.
+Overview:
+The application runs using the following technologies:
 
+- Database: MongoDB
+- Frontend: React.js
+- Backend: Node.js + Express.js
+- Authentication: Firebase
+- Hosting:
+  o Frontend: Vercel
+  o Backend: Render
 
-## SUPPLEMENTAL RESOURCES  
-1.	How to clone a project to IntelliJ using Git?
+Key Features:
 
-> Ensure that you have Git installed on your system and that IntelliJ is installed using [Toolbox](https://www.jetbrains.com/toolbox-app/). Make sure that you are using version 2022.3.2. Once this has been confirmed, click the clone button and use the 'IntelliJ IDEA (HTTPS)' button. This will open IntelliJ with a prompt to clone the proejct. Save it in a safe location for the directory and press clone. IntelliJ will prompt you for your credentials. Enter in your WGU Credentials and the project will be cloned onto your local machine.  
+- Secure Login
+- CRUD Operations for Applications
+- Reminders / Local Notifications
+- CSV Report Generation
+- Analytics
 
-2. How to create a branch and start Development?
+Installation:
 
-- GitLab method
-> Press the '+' button located near your branch name. In the dropdown list, press the 'New branch' button. This will allow you to create a name for your branch. Once the branch has been named, you can select 'Create Branch' to push the branch to your repository.
+1. Clone the Repo to the Local Machine.
+2. Install Dependencies (run ‘npm install’ inside both client and server folders).
+3. Create .env files for both client and server folders.
+   - Ensure MongoDB link and port sit inside server .env like the following:
+     MONGO_URI = <link>
+     PORT = <port>
+   - Ensure Render link sits within client .env like the following:
+     VITE_API_URL = <link>
+4. Deploy Locally:
+   - CD server and client separately and run ‘npm run dev’ to start the server.
+   - Once both are up and running, click on the localhost link from the client to access the application.
+5. (Optional) Host Application:
+   - On Vercel, deploy using the /client folder and use information in the .env file for environment variables.
+   - On Render, deploy using /server folder… once running, click connect and copy the outbound IP addresses.
+   - On MongoDB, allow incoming IP addresses from Render by pasting in the outbound addresses into your cluster.
 
-- IntelliJ method
-> In IntelliJ, Go to the 'Git' button on the top toolbar. Select the new branch option and create a name for the branch. Make sure checkout branch is selected and press create. You can now add a commit message and push the new branch to the local repo.
+WARNING: If you decide to host the application, and therefore have to add .env files, do NOT forget to create a
+.gitignore file containing your .env files. This also applies to your Firebase Keys if you decide to set up Firebase
+Authentication as well.
 
-## SUPPORT
-If you need additional support, please navigate to the course page and reach out to your course instructor.
+---
 
-## FUTURE USE
-Take this opportunity to create or add to a simple resume portfolio to highlight and showcase your work for future use in career search, experience, and education!
+Running the Application (User’s Perspective)
+
+The purpose of this guide is to show you how to use the Job Application Tracker.
+
+1. Visit the following link: https://student-repos-ttuetk1-d424-software-ten.vercel.app/
+2. If you don’t have an account, create one by clicking ‘Sign up’; otherwise, enter your credentials and click ‘Log in’.
+3. Enter a valid email and password
+4. This will take you to your dashboard, where you get access to multiple features:
+
+- At the top of the screen, you can see which account you’re currently logged into.
+- Underneath that, you have your summary, where it shows the total number of applications, as well as how many of each status.
+- The first button is ‘Add Application’, where a new element will appear. This is where you’ll add your application. Each application
+  requires you to enter the company name, the position you’re applying for, and your current status. Optionally, you can enter notes
+  (up to 500 characters), set a reminder date, and a reminder message to display locally when the day arrives.
+
+5. Once you’ve logged your first application, you’ll see it listed in the table. Underneath the application log, you’ll see three separate charts:
+
+- Application by Status: Shows all applications according to their current status.
+- Applications Over Time: Lists the total number of applications per month, according to the date of their entry.
+- Success Funnel: Tracks how your applications have changed since first entering them.
+
+6. If, for whatever reason, you want to cancel the application you’re currently working on, just click the ‘Cancel’ button in
+   the upper left corner of the New Application element.
+7. If you’ve already created an application and want to either edit or delete it, the buttons are found on the far right of the
+   log. Once updated, don’t forget to click the ‘Update’ button.
+8. Once the log gets filled, it can be challenging to track all your applications, which is why there's a search bar on the upper
+   right corner of the logs. From here, you can search by company (don’t worry about case sensitivity).
+9. Right beneath the ‘All Applications’ section, there’s a ‘Generate Report’ button. This will download a CSV file for all of your
+   current applications in the log. The file includes company, position, current status, notes, reminder, and the date/time of your entry.
+   It also includes a timestamp when the report was generated.
+10. In the upper left corner of the screen, you’ll notice a button with three horizontal lines. This is the sidebar, where, once
+    clicked, it displays the application name, current screen, and, at the very bottom, the ‘Log Out’ button. Although bare for the
+    time being, plans for additional features are forthcoming in the near future. Clicking the ‘Log Out’ button will bring you back to the login screen.
+
+TIP: If you’re experiencing issues with the application, it's likely that your browser does not support the Job Application Tracker.
+The application was built and tested using Google Chrome; please default to that browser if you’re having issues.
