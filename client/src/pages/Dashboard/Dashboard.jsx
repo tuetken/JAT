@@ -8,18 +8,92 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  BarChart,
+  Bar,
 } from "recharts";
 
 function Dashboard() {
   const [applications, setApplications] = useState([]);
-  const [chartData, setChartData] = useState([]);
   const [notifiedIds, setNotifiedIds] = useState([]);
   const [editingApp, setEditingApp] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { logout } = useAuth();
 
-  // Reminder Notifications + Fetch Applications
+  const generateReport = () => {
+    // 1️⃣ Create report title and timestamp
+    const reportTitle = "Job Application Report";
+    const timestamp = new Date().toLocaleString();
 
+    // 2️⃣ Build the header row
+    const headers = [
+      "Company",
+      "Position",
+      "Status",
+      "Notes",
+      "Reminder Date",
+      "Date Created",
+    ];
+
+    // 3️⃣ Map data into rows
+    const rows = applications.map((app) => [
+      app.company,
+      app.position,
+      app.status,
+      app.notes || "",
+      app.reminder
+        ? new Date(app.reminder).toLocaleDateString()
+        : "—",
+      new Date(app.createdAt).toLocaleString(),
+    ]);
+
+    // 4️⃣ Combine into CSV format
+    const csvContent = [
+      [reportTitle],
+      [`Generated: ${timestamp}`],
+      [],
+      headers,
+      ...rows,
+    ]
+      .map((e) => e.join(","))
+      .join("\n");
+
+    // 5️⃣ Trigger file download
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      "job_application_report.csv"
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // --- CRUD State ---
+  const [formData, setFormData] = useState({
+    company: "",
+    position: "",
+    status: "waiting for response",
+    notes: "",
+    reminder: "",
+    reminderMessage: "",
+  });
+
+  useEffect(() => {
+    document.title = "Job Application Tracker";
+  }, []);
+
+  // --- Fetch Applications ---
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -35,6 +109,7 @@ function Dashboard() {
     fetchApplications();
   }, []);
 
+  // --- Reminders and Notifications ---
   useEffect(() => {
     if (
       "Notification" in window &&
@@ -43,7 +118,19 @@ function Dashboard() {
       Notification.requestPermission();
     }
 
-    // Check and trigger reminders
+    const triggerNotification = (app) => {
+      if (Notification.permission !== "granted") return;
+
+      const message =
+        app.reminderMessage &&
+        app.reminderMessage.trim().length > 0
+          ? `Reminder for ${app.company} — ${app.position}:\n${app.reminderMessage}`
+          : `Reminder for ${app.company} — ${app.position}`;
+
+      new Notification("📅 Reminder", {
+        body: message,
+      });
+    };
 
     const checkReminders = () => {
       const today = new Date().toISOString().split("T")[0];
@@ -63,21 +150,6 @@ function Dashboard() {
       });
     };
 
-    const triggerNotification = (app) => {
-      if (Notification.permission !== "granted") return;
-
-      const message =
-        app.reminderMessage &&
-        app.reminderMessage.trim().length > 0
-          ? `Reminder for ${app.company} — ${app.position}:\n${app.reminderMessage}`
-          : `Reminder for ${app.company} — ${app.position}`;
-
-      new Notification("📅 Reminder", {
-        body: message,
-        icon: "/favicon.ico",
-      });
-    };
-
     if (applications.length > 0) checkReminders();
     const hourlyInterval = setInterval(
       checkReminders,
@@ -86,50 +158,7 @@ function Dashboard() {
     return () => clearInterval(hourlyInterval);
   }, [applications, notifiedIds]);
 
-  // Chart Data
-
-  useEffect(() => {
-    if (applications.length === 0) {
-      setChartData([]);
-      return;
-    }
-
-    const statusCounts = applications.reduce((acc, app) => {
-      if (!app.status) return acc;
-      const normalized = app.status.toLowerCase().trim();
-      acc[normalized] = (acc[normalized] || 0) + 1;
-      return acc;
-    }, {});
-
-    const labelMap = {
-      "waiting for response": "Waiting For Response",
-      interview: "Interview",
-      "offer received": "Offer Received",
-      accepted: "Accepted",
-      denied: "Denied",
-    };
-
-    const data = Object.keys(statusCounts).map(
-      (status) => ({
-        name: labelMap[status] || status,
-        value: Number(statusCounts[status]),
-      })
-    );
-
-    setChartData(data);
-  }, [applications]);
-
-  // CRUD
-
-  const [formData, setFormData] = useState({
-    company: "",
-    position: "",
-    status: "waiting for response",
-    notes: "",
-    reminder: "",
-    reminderMessage: "",
-  });
-
+  // --- Handle Form Input ---
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -137,11 +166,11 @@ function Dashboard() {
     });
   };
 
+  // --- Handle Create ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // ✅ Build the payload exactly as Axios will send it
       const payload = {
         company: formData.company,
         position: formData.position,
@@ -150,36 +179,32 @@ function Dashboard() {
         reminder: formData.reminder
           ? new Date(formData.reminder + "T00:00:00")
           : null,
-        reminderMessage: formData.reminderMessage || "", // ✅ critical field
+        reminderMessage: formData.reminderMessage || "",
       };
 
-      // 🧪 TEST: log what’s actually being sent
       console.log("Payload being sent →", payload);
-
-      // 🚀 Send it to backend
       const res = await api.post("/applications", payload);
 
-      // ✅ Update local state after successful save
       setApplications((prev) => [...prev, res.data]);
 
-      // ✅ Reset form fields
       setFormData({
         company: "",
         position: "",
         status: "waiting for response",
         notes: "",
         reminder: "",
-        reminderMessage: "", // ✅ reset too
+        reminderMessage: "",
       });
     } catch (error) {
       console.error("Error creating application:", error);
     }
   };
 
+  // --- Handle Update ---
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      console.log("Updating application →", formData); // ✅ verify
+      console.log("Updating application →", formData);
       const res = await api.put(
         `/applications/${editingApp._id}`,
         {
@@ -190,28 +215,24 @@ function Dashboard() {
           reminder: formData.reminder
             ? new Date(formData.reminder + "T00:00:00")
             : null,
-          reminderMessage: formData.reminderMessage || "", // ✅ include this
+          reminderMessage: formData.reminderMessage || "",
         }
       );
+
       setApplications((prev) =>
         prev.map((a) =>
           a._id === editingApp._id ? res.data : a
         )
       );
+
       setEditingApp(null);
-      setFormData({
-        company: "",
-        position: "",
-        status: "waiting for response",
-        notes: "",
-        reminder: "",
-        reminderMessage: "",
-      });
+      resetForm();
     } catch (error) {
       console.error("Error updating application:", error);
     }
   };
 
+  // --- Reset Form ---
   const resetForm = () => {
     setFormData({
       company: "",
@@ -224,21 +245,86 @@ function Dashboard() {
     setShowForm(false);
   };
 
-  // Logout
-
+  // --- Logout ---
   const handleLogout = async () => {
     await logout();
   };
 
-  // Render
+  // --- Color Palette for Charts ---
+  const COLORS = [
+    "#3B82F6", // blue
+    "#10B981", // green
+    "#F59E0B", // orange
+    "#84CC16", // lime
+    "#EF4444", // red
+  ];
 
-  const COLORS = {
-    "Waiting For Response": "#3B82F6",
-    Interview: "#10B981",
-    "Offer Received": "#F59E0B",
-    Accepted: "#84CC16",
-    Denied: "#EF4444",
+  // --- Derive Status Counts ---
+  const statusCounts = applications.reduce((acc, app) => {
+    if (!app.status) return acc;
+    const normalized = app.status.toLowerCase().trim();
+    acc[normalized] = (acc[normalized] || 0) + 1;
+    return acc;
+  }, {});
+
+  // --- Applications by Status (Pie Chart) ---
+  const labelMap = {
+    "waiting for response": "Waiting For Response",
+    interview: "Interview",
+    "offer received": "Offer Received",
+    accepted: "Accepted",
+    denied: "Denied",
   };
+
+  const chartData = Object.keys(statusCounts).map(
+    (status) => ({
+      name: labelMap[status] || status,
+      value: Number(statusCounts[status]),
+    })
+  );
+
+  // --- Applications Over Time (Line Chart) ---
+  const appsByMonthMap = applications.reduce((acc, app) => {
+    if (!app.createdAt) return acc;
+    const date = new Date(app.createdAt);
+    const month = date.toLocaleString("default", {
+      month: "short",
+      year: "numeric",
+    });
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+
+  const appsOverTime = Object.entries(appsByMonthMap).map(
+    ([month, count]) => ({
+      month,
+      count,
+    })
+  );
+
+  // --- Success Funnel (Bar Chart) ---
+  const funnelData = [
+    { stage: "Applied", count: applications.length },
+    {
+      stage: "Interview",
+      count: statusCounts["interview"] || 0,
+    },
+    {
+      stage: "Offer Received",
+      count: statusCounts["offer received"] || 0,
+    },
+    {
+      stage: "Accepted",
+      count: statusCounts["accepted"] || 0,
+    },
+    { stage: "Denied", count: statusCounts["denied"] || 0 },
+  ];
+
+  const filteredApplications = applications.filter((app) =>
+    app.company
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 space-y-8 text-white">
@@ -401,6 +487,24 @@ function Dashboard() {
           All Applications
         </h2>
 
+        <button
+          onClick={generateReport}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-all"
+        >
+          Generate Report
+        </button>
+
+        {/* Search Bar */}
+        <div className="flex justify-end mb-4">
+          <input
+            type="text"
+            placeholder="Search by company..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="px-3 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+          />
+        </div>
+
         {applications.length === 0 ? (
           <p>No applications found.</p>
         ) : (
@@ -417,7 +521,7 @@ function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {applications.map((app) => (
+              {filteredApplications.map((app) => (
                 <tr
                   key={app._id}
                   className="border-b border-gray-700"
@@ -498,39 +602,130 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Chart */}
-      <div className="bg-gray-800 p-4 rounded-lg shadow w-full max-w-sm min-h-[350px] overflow-visible flex flex-col items-center justify-center">
-        <h2 className="text-lg font-semibold mb-4">
-          Applications by Status
-        </h2>
-        {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                outerRadius="80%"
-                label
-                isAnimationActive={true}
-                animationDuration={800}
-              >
-                {chartData.map((entry, i) => (
-                  <Cell
-                    key={`cell-${i}`}
-                    fill={COLORS[entry.name] || "#8884d8"}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="text-gray-400 italic">
-            No data yet
-          </p>
-        )}
+      {/* Insights Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+        {/* Applications by Status */}
+        <div className="bg-gray-800 p-4 rounded-lg shadow min-h-[350px] overflow-visible flex flex-col items-center justify-center">
+          <h2 className="text-lg font-semibold mb-4">
+            Applications by Status
+          </h2>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius="80%"
+                  label
+                  isAnimationActive={true}
+                  animationDuration={800}
+                >
+                  {chartData.map((entry, i) => (
+                    <Cell
+                      key={`cell-${i}`}
+                      fill={COLORS[i % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1F2937",
+                    borderColor: "#374151",
+                    color: "#E5E7EB",
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-gray-400 italic">
+              No data yet
+            </p>
+          )}
+        </div>
+
+        {/* Applications Over Time */}
+        <div className="bg-gray-800 p-4 rounded-lg shadow min-h-[350px] overflow-visible flex flex-col items-center justify-center">
+          <h2 className="text-lg font-semibold mb-4">
+            Applications Over Time
+          </h2>
+          {appsOverTime && appsOverTime.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={appsOverTime}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#374151"
+                />
+                <XAxis dataKey="month" stroke="#9CA3AF" />
+                <YAxis
+                  allowDecimals={false}
+                  stroke="#9CA3AF"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1F2937",
+                    borderColor: "#374151",
+                    color: "#E5E7EB",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-gray-400 italic">
+              No application history yet
+            </p>
+          )}
+        </div>
+
+        {/* Success Funnel */}
+        <div className="bg-gray-800 p-4 rounded-lg shadow min-h-[350px] overflow-visible flex flex-col items-center justify-center lg:col-span-2">
+          <h2 className="text-lg font-semibold mb-4">
+            Success Funnel
+          </h2>
+          {funnelData && funnelData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={funnelData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#374151"
+                />
+                <XAxis dataKey="stage" stroke="#9CA3AF" />
+                <YAxis
+                  allowDecimals={false}
+                  stroke="#9CA3AF"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1F2937",
+                    borderColor: "#374151",
+                    color: "#E5E7EB",
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  fill="#3B82F6"
+                  barSize={50}
+                  radius={[10, 10, 0, 0]}
+                  isAnimationActive={true}
+                  animationDuration={800}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-gray-400 italic">
+              No funnel data available
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
