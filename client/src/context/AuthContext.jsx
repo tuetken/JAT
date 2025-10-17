@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import {
   createContext,
   useContext,
@@ -13,10 +12,8 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-// Create the context
 const AuthContext = createContext();
 
-// Provider component wraps the app
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +63,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook for using auth context easily
 export const useAuth = () => {
   return useContext(AuthContext);
 };

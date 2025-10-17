@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Menu } from "lucide-react"; // sidebar toggle icon
+import { Menu } from "lucide-react";
 import Topbar from "../components/Topbar";
 
 function MainLayout() {

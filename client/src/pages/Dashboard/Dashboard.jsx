@@ -26,11 +26,9 @@ function Dashboard() {
   const { logout } = useAuth();
 
   const generateReport = () => {
-    // 1️⃣ Create report title and timestamp
     const reportTitle = "Job Application Report";
     const timestamp = new Date().toLocaleString();
 
-    // 2️⃣ Build the header row
     const headers = [
       "Company",
       "Position",
@@ -40,7 +38,6 @@ function Dashboard() {
       "Date Created",
     ];
 
-    // 3️⃣ Map data into rows
     const rows = applications.map((app) => [
       app.company,
       app.position,
@@ -52,7 +49,6 @@ function Dashboard() {
       new Date(app.createdAt).toLocaleString(),
     ]);
 
-    // 4️⃣ Combine into CSV format
     const csvContent = [
       [reportTitle],
       [`Generated: ${timestamp}`],
@@ -63,7 +59,6 @@ function Dashboard() {
       .map((e) => e.join(","))
       .join("\n");
 
-    // 5️⃣ Trigger file download
     const blob = new Blob([csvContent], {
       type: "text/csv;charset=utf-8;",
     });
@@ -79,7 +74,7 @@ function Dashboard() {
     document.body.removeChild(link);
   };
 
-  // --- CRUD State ---
+  // CRUD State
   const [formData, setFormData] = useState({
     company: "",
     position: "",
@@ -93,7 +88,7 @@ function Dashboard() {
     document.title = "Job Application Tracker";
   }, []);
 
-  // --- Fetch Applications ---
+  // Fetch Applications
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -109,7 +104,7 @@ function Dashboard() {
     fetchApplications();
   }, []);
 
-  // --- Reminders and Notifications ---
+  // Reminders and Notifications
   useEffect(() => {
     if (
       "Notification" in window &&
@@ -158,7 +153,6 @@ function Dashboard() {
     return () => clearInterval(hourlyInterval);
   }, [applications, notifiedIds]);
 
-  // --- Handle Form Input ---
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -166,7 +160,6 @@ function Dashboard() {
     });
   };
 
-  // --- Handle Create ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -200,7 +193,6 @@ function Dashboard() {
     }
   };
 
-  // --- Handle Update ---
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -232,7 +224,7 @@ function Dashboard() {
     }
   };
 
-  // --- Reset Form ---
+  // Reset
   const resetForm = () => {
     setFormData({
       company: "",
@@ -245,12 +237,11 @@ function Dashboard() {
     setShowForm(false);
   };
 
-  // --- Logout ---
+  // Logout
   const handleLogout = async () => {
     await logout();
   };
 
-  // --- Color Palette for Charts ---
   const COLORS = [
     "#3B82F6", // blue
     "#10B981", // green
@@ -259,7 +250,6 @@ function Dashboard() {
     "#EF4444", // red
   ];
 
-  // --- Derive Status Counts ---
   const statusCounts = applications.reduce((acc, app) => {
     if (!app.status) return acc;
     const normalized = app.status.toLowerCase().trim();
@@ -267,7 +257,7 @@ function Dashboard() {
     return acc;
   }, {});
 
-  // --- Applications by Status (Pie Chart) ---
+  // Applications by Status
   const labelMap = {
     "waiting for response": "Waiting For Response",
     interview: "Interview",
@@ -283,7 +273,7 @@ function Dashboard() {
     })
   );
 
-  // --- Applications Over Time (Line Chart) ---
+  // Applications Over Time
   const appsByMonthMap = applications.reduce((acc, app) => {
     if (!app.createdAt) return acc;
     const date = new Date(app.createdAt);
@@ -302,7 +292,7 @@ function Dashboard() {
     })
   );
 
-  // --- Success Funnel (Bar Chart) ---
+  // Success Funnel
   const funnelData = [
     { stage: "Applied", count: applications.length },
     {

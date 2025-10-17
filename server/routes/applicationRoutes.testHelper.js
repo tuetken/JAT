@@ -1,20 +1,19 @@
 import express from "express";
 import Application from "../models/Application.js";
-import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
 // CREATE
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const newApp = await Application.create({
-      userId: req.user.uid,
+      userId: req.user?.uid || "test-user",
       company: req.body.company,
       position: req.body.position,
       status: req.body.status?.toLowerCase(),
       notes: req.body.notes,
       reminder: req.body.reminder || null,
-      reminderMessage: req.body.reminderMessage,
+      reminderMessage: req.body.reminderMessage || "",
     });
     res.status(201).json(newApp);
   } catch (error) {
@@ -24,73 +23,56 @@ router.post("/", verifyToken, async (req, res) => {
 });
 
 // READ
-
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const applications = await Application.find({
-      userId: req.user.uid,
+      userId: req.user?.uid || "test-user",
     });
     res.status(200).json(applications);
   } catch (error) {
     console.error("Error fetching applications:", error);
     res
-      .status(500)
+      .status(400)
       .json({ message: "Failed to fetch applications." });
   }
 });
 
 // UPDATE
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
-    const updatedApp = await Application.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.uid },
+    const updated = await Application.findByIdAndUpdate(
+      req.params.id,
       {
         company: req.body.company,
         position: req.body.position,
         status: req.body.status?.toLowerCase(),
         notes: req.body.notes,
-        reminder: req.body.reminder || null,
+        reminder: req.body.reminder,
         reminderMessage: req.body.reminderMessage,
       },
-      { new: true, runValidators: true }
+      { new: true }
     );
-
-    if (!updatedApp) {
-      return res
-        .status(404)
-        .json({ message: "Application not found" });
-    }
-
-    res.json(updatedApp);
+    res.status(200).json(updated);
   } catch (error) {
     console.error("Error updating application:", error);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(400)
+      .json({ message: "Failed to update application." });
   }
 });
 
 // DELETE
-
-router.delete("/:id", verifyToken, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
-    const deletedApp = await Application.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user.uid,
-    });
-
-    if (!deletedApp) {
-      return res.status(404).json({
-        message: "Application not found or unauthorized.",
-      });
-    }
-
-    res.status(200).json({
-      message: "Application deleted successfully.",
-    });
+    await Application.findByIdAndDelete(req.params.id);
+    res
+      .status(200)
+      .json({ message: "Application deleted" });
   } catch (error) {
     console.error("Error deleting application:", error);
-    res.status(500).json({
-      message: "Server error while deleting application.",
-    });
+    res
+      .status(400)
+      .json({ message: "Failed to delete application." });
   }
 });
 

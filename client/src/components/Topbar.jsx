@@ -5,7 +5,6 @@ function Topbar() {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Derive page title from current route
   const getTitle = () => {
     if (location.pathname.includes("dashboard"))
       return "Dashboard";

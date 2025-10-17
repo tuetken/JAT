@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import applicationRoutes from "./routes/applicationRoutes.js";
+import applicationRoutes from "../routes/applicationRoutes.js";
 import admin from "firebase-admin";
 import { createRequire } from "module";
 import reminderRoutes from "./routes/reminderRoutes.js";

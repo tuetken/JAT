@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-// Define the structure (schema) for a Job Application
 const applicationSchema = new mongoose.Schema(
   {
     userId: {
@@ -52,7 +51,6 @@ const applicationSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ✅ New Field — allows per-application custom messages
     reminderMessage: {
       type: String,
       trim: true,
