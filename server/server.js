@@ -1,10 +1,16 @@
 import express from "express";
+import path from "path";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import applicationRoutes from "../routes/applicationRoutes.js";
 import admin from "firebase-admin";
 import { createRequire } from "module";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import applicationRoutes from "./routes/applicationRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
 
 const require = createRequire(import.meta.url);
