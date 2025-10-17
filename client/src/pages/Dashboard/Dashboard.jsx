@@ -122,25 +122,39 @@ function Dashboard() {
           ? `Reminder for ${app.company} — ${app.position}:\n${app.reminderMessage}`
           : `Reminder for ${app.company} — ${app.position}`;
 
+      console.log(
+        `[NotificationService] Triggered: ${message}`
+      );
+
       new Notification("📅 Reminder", {
         body: message,
       });
     };
 
     const checkReminders = () => {
-      const today = new Date().toISOString().split("T")[0];
+      const now = new Date();
+      const todayLocal = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      ).getTime(); // midnight today
+
       applications.forEach((app) => {
-        if (app.reminder) {
-          const reminderDate = new Date(app.reminder)
-            .toISOString()
-            .split("T")[0];
-          if (
-            reminderDate === today &&
-            !notifiedIds.includes(app._id)
-          ) {
-            triggerNotification(app);
-            setNotifiedIds((prev) => [...prev, app._id]);
-          }
+        if (!app.reminder) return;
+
+        const reminder = new Date(app.reminder);
+        const reminderLocal = new Date(
+          reminder.getFullYear(),
+          reminder.getMonth(),
+          reminder.getDate()
+        ).getTime();
+
+        // Compare normalized local dates
+        if (reminderLocal === todayLocal) {
+          console.log(
+            `[Reminder Check] Matched ${app.company}`
+          );
+          triggerNotification(app);
         }
       });
     };
