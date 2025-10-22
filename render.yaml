@@ -1,0 +1,20 @@
+# render.yaml
+services:
+  - type: web
+    name: jat-backend-container
+    env: docker
+    region: ohio
+    plan: free
+    rootDir: server
+    dockerfilePath: dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://student-repos-ttuetk1-d424-software-ten.vercel.app
+      - key: FRONTEND_URL
+        value: https://student-repos-ttuetk1-d424-software-ten.vercel.app
