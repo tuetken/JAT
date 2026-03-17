@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 import applicationRoutes from "./routes/applicationRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
+import { traceDeckLogger } from "@tracedeck/sdk";
 
 const require = createRequire(import.meta.url);
 const serviceAccount = require("./config/firebaseServiceAccount.json");
@@ -29,7 +30,13 @@ admin.initializeApp({
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(traceDeckLogger({
+  ingestUrl: process.env.TRACEDECK_INGEST_URL,
+  projectId: process.env.TRACEDECK_PROJECT_ID,
+  logErrors: true,
+}));
 app.use("/api/applications", applicationRoutes);
+app.use("/api/reminders", reminderRoutes);
 
 // MongoDB Connection
 mongoose
@@ -48,6 +55,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server Is Running On Port ${PORT}`);
 });
-
-// Reminders
-app.use("/api/reminders", reminderRoutes);
