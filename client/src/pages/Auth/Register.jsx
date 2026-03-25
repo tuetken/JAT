@@ -21,43 +21,43 @@ function Register() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded-2xl shadow w-80">
-        <h2 className="text-xl font-bold mb-4 text-center">
+    <div className="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <div className="bg-gray-800 bg-opacity-90 p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700">
+        <h1 className="text-4xl font-extrabold text-blue-400 mb-8 tracking-wide text-center">
           Create Account
-        </h2>
+        </h1>
         {error && (
-          <p className="text-red-500 text-sm mb-2">
+          <p className="text-red-400 text-sm mb-4">
             {error}
           </p>
         )}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
             placeholder="Email"
-            className="border p-2 rounded w-full mb-3"
+            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type="password"
             placeholder="Password"
-            className="border p-2 rounded w-full mb-4"
+            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <button
             type="submit"
-            className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-semibold py-2 rounded-lg shadow-md"
           >
             Sign Up
           </button>
         </form>
-        <p className="text-sm text-center mt-4">
+        <p className="text-sm text-center mt-6 text-gray-400">
           Already have an account?{" "}
           <a
             href="/login"
-            className="text-blue-600 underline"
+            className="text-blue-400 hover:underline"
           >
             Log in
           </a>
