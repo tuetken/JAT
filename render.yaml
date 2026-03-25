@@ -15,6 +15,6 @@ services:
       - key: FIREBASE_SERVICE_ACCOUNT_KEY
         sync: false
       - key: CORS_ORIGIN
-        value: https://student-repos-ttuetk1-d424-software-ten.vercel.app
+        value: https://jobapplicationtracker-phi.vercel.app
       - key: FRONTEND_URL
-        value: https://student-repos-ttuetk1-d424-software-ten.vercel.app
+        value: https://jobapplicationtracker-phi.vercel.app
