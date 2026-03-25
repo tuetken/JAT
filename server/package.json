@@ -10,7 +10,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@tracedeck/sdk": "file:../../TraceDeck/sdk",
+    "@tracedeck/sdk": "file:./tracedeck-sdk",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
