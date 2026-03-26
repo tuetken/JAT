@@ -49,7 +49,7 @@ Running the Application (User’s Perspective)
 
 The purpose of this guide is to show you how to use the Job Application Tracker.
 
-1. Visit the following link: https://student-repos-ttuetk1-d424-software-ten.vercel.app/
+1. Visit the following link: jobapplicationtracker-phi.vercel.app
 2. If you don’t have an account, create one by clicking ‘Sign up’; otherwise, enter your credentials and click ‘Log in’.
 3. Enter a valid email and password
 4. This will take you to your dashboard, where you get access to multiple features:
