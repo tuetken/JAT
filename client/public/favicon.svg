@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Background rounded rect -->
+  <rect width="64" height="64" rx="14" fill="#4F46E5"/>
+
+  <!-- Briefcase body -->
+  <rect x="10" y="24" width="44" height="30" rx="4" fill="white" opacity="0.95"/>
+
+  <!-- Briefcase handle -->
+  <path d="M22 24V20a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Center clasp line -->
+  <line x1="10" y1="38" x2="54" y2="38" stroke="#4F46E5" stroke-width="2.5" opacity="0.4"/>
+
+  <!-- Clasp -->
+  <rect x="28" y="34" width="8" height="8" rx="2" fill="#4F46E5" opacity="0.7"/>
+
+  <!-- Lines suggesting document/list -->
+  <line x1="18" y1="47" x2="28" y2="47" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="36" y1="47" x2="46" y2="47" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+</svg>

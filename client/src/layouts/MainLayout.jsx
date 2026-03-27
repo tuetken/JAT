@@ -1,45 +1,41 @@
 import { useState } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Menu } from "lucide-react";
 import Topbar from "../components/Topbar";
 
 function MainLayout() {
   const { logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-brand-dark text-white transition-all duration-300">
       {/* Sidebar */}
-      {sidebarOpen && (
-        <aside className="bg-gray-800 p-6 flex flex-col justify-between w-64 transition-all duration-300">
-          <div>
-            <h2 className="text-2xl font-bold mb-8 text-blue-400">
-              Job Application Tracker
-            </h2>
-
-            <nav className="flex flex-col space-y-3">
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-blue-400 font-semibold"
-                    : "text-gray-300 hover:text-white"
-                }
-              >
-                Dashboard
-              </NavLink>
-            </nav>
-          </div>
+      <aside
+        className={`bg-gray-800 flex flex-col w-64 shrink-0 transition-[max-width] duration-300 ease-in-out overflow-hidden ${
+          sidebarOpen ? "max-w-xs" : "max-w-0"
+        }`}
+      >
+        <div
+          className={`p-6 flex flex-col ${sidebarOpen ? "opacity-100" : "opacity-0"}`}
+          style={{
+            transition: sidebarOpen
+              ? "opacity 250ms cubic-bezier(0.8, 0, 1, 1) 80ms"
+              : "opacity 60ms ease-out",
+          }}
+        >
+          <h2 className="text-2xl font-bold mb-8 text-blue-400">
+            Job Application Tracker
+          </h2>
 
           <button
             onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mt-6"
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
           >
             Log Out
           </button>
-        </aside>
-      )}
+        </div>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col transition-all duration-300">
